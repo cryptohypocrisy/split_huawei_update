@@ -24,7 +24,9 @@
 use strict;
 use warnings;
 
-my $CRC_CHECK= -e "crc" && -x _;
+# Added absolute path to crc bin
+my $CRC_BIN = "/usr/bin/local/crc";
+my $CRC_CHECK= -e $CRC_BIN && -x _;
 
 # Turn on print flushing.
 $|++;
@@ -49,9 +51,10 @@ binmode INFILE;
 # Skip the first 92 bytes, they're blank.
 #seek(INFILE, 92, 0);
  
-# We'll dump the files into a folder called "output".
+# We'll dump the files into a folder called "output" in user's home folder.
 my $fileLoc=0;
-my $BASEPATH = "output/";
+my $HOME = $ENV{'HOME'};
+my $BASEPATH = "$HOME/splitupdate/output/";
 mkdir $BASEPATH;
 
 while (!eof(INFILE))
@@ -128,13 +131,13 @@ sub dump_file {
       print OUTFILE $buffer;
       close OUTFILE;
 
-		  print "\r";
-		  print "verifying checksum for $fileType ($fileSize)...";
+      print "\n";
+      print "verifying checksum for $fileType ($fileSize)...";
 
-      $calculatedCRC=`./crc $BASEPATH$fileType.img` if $CRC_CHECK;
+      $calculatedCRC="$CRC_BIN $BASEPATH$fileType.img" if $CRC_CHECK;
       chomp($calculatedCRC) if $CRC_CHECK;
 
-		  print "\r";
+      print "\n";
       printf "%*v2.2X", '', $fileSeq;
       if($CRC_CHECK){
 			  if (!$calculatedCRC eq $sourceCRC)
